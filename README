@@ -1,0 +1,14 @@
+This fuse filesystem mirrors /srv.
+
+Any directory ending in .volume should contain a file named "size" that contains the size of the volume.
+
+  mkdir -p /srv/drive.volume /mnt/fused /mnt/inception
+
+  echo "2147483648" > /srv/drive.volume/size   # 2gb
+
+  ./cowfuse /mnt/fused
+
+  mkfs.xfs -f /mnt/fused/drive.volume
+
+  mount -o loop /mnt/fused/drive.volume /mnt/inception
+
