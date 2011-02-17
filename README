@@ -1,4 +1,4 @@
-This fuse filesystem mirrors /srv.
+This fuse filesystem mirrors /srv by default.
 
 Any directory ending in .volume should contain a file named "size" that contains the size of the volume.
 
@@ -6,7 +6,7 @@ Any directory ending in .volume should contain a file named "size" that contains
 
   echo "2147483648" > /srv/drive.volume/size   # 2gb
 
-  ./cowfuse /mnt/fused
+  ./cowfuse -oroot=/srv /mnt/fused
 
   mkfs.xfs -f /mnt/fused/drive.volume
 
