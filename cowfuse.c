@@ -34,7 +34,7 @@ typedef struct filetype
 {
   int (*read)(struct filetype *, char *, size_t, off_t);
   int (*write)(struct filetype *, const char *, size_t, off_t);
-  int (*fsync)(struct filetype *, int data);
+  int (*fsync)(struct filetype *, int);
   int (*close)(struct filetype *);
 } filetype;
 
