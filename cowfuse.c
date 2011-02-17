@@ -19,10 +19,16 @@
 #include <dirent.h>
 #include <limits.h>
 #include <pwd.h>
+#include <stddef.h>
 #include <linux/falloc.h>
 
 #define BLOCK_SIZE 4194304 // 4 MB
-#define ROOT_DIR "/srv"
+#define DEFAULT_ROOT "/srv"
+
+struct options {
+  char *root;
+};
+struct options options;
 
 typedef struct filetype
 {
@@ -136,7 +142,7 @@ void lock_block(int fd, int block, int lock)
 }
 
 
-// VOLUME IMPLEMENTATION
+// VOLUME SHIT
 
 static int volume_read(struct filetype *of, char *buf, size_t len, off_t offset)
 {
@@ -236,7 +242,7 @@ struct filetype *open_volume(const char *path)
 }
 
 
-// SNAPSHOT IMPLEMENTATION
+// SNAPSHOT SHIT
 
 static int snapshot_read(struct filetype *of, char *buf, size_t len,
                          off_t offset)
@@ -437,7 +443,7 @@ static int cbs_fsync(const char *path, int data, struct fuse_file_info *info)
 
 static void *cbs_init(struct fuse_conn_info *conn)
 {
-  if (chdir(ROOT_DIR))
+  if (chdir(options.root))
     debugperror("chdir");
   return NULL;
 }
@@ -475,6 +481,14 @@ int main(int argc, char **argv)
     .init = cbs_init,
   };
 
+  options.root = DEFAULT_ROOT;
+  static struct fuse_opt cbs_opts[] =
+  {
+    {"root=%s", offsetof(struct options, root), 0},
+    FUSE_OPT_END
+  };
+
+  fuse_opt_parse(&args, &options, cbs_opts, NULL);
   pthread_mutex_init(&dmut, NULL);
   signal(SIGPIPE, SIG_IGN);
   return fuse_main(argc, argv, &cbs_oper, NULL);
