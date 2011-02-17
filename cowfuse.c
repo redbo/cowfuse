@@ -464,8 +464,9 @@ static int cbs_statfs(const char *path, struct statvfs *stat)
 
 int main(int argc, char **argv)
 {
-  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  fuse_parse_cmdline(&args, NULL, NULL, &global_debug);
+  struct fuse_args args = FUSE_ARGS_INIT(argc, argv),
+              _tmpargs = FUSE_ARGS_INIT(argc, argv);
+  fuse_parse_cmdline(&_tmpargs, NULL, NULL, &global_debug);
 
   static struct fuse_operations cbs_oper =
   {
@@ -488,9 +489,9 @@ int main(int argc, char **argv)
     FUSE_OPT_END
   };
 
-  fuse_opt_parse(&args, &options, cbs_opts, NULL);
   pthread_mutex_init(&dmut, NULL);
   signal(SIGPIPE, SIG_IGN);
-  return fuse_main(argc, argv, &cbs_oper, NULL);
+  fuse_opt_parse(&args, &options, cbs_opts, NULL);
+  return fuse_main(args.argc, args.argv, &cbs_oper, NULL);
 }
 
