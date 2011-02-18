@@ -223,15 +223,13 @@ struct filetype *open_volume(const char *path)
   char datafile[PATH_MAX];
   volume_path(datafile, path, "volume");
   vf->fd = open(datafile, O_CREAT | O_RDWR, 0666);
-  if (ftruncate(vf->fd, vf->size) ||
-      fallocate(vf->fd, FALLOC_FL_KEEP_SIZE, 0, vf->size))
-    debugperror("ftruncate volume");
+  if (posix_fallocate(vf->fd, 0, vf->size))
+    debugperror("posix_fallocate volume");
 
   volume_path(datafile, path, "map");
   int mapfile = open(datafile, O_CREAT | O_RDWR, 0666);
-  if (ftruncate(mapfile, vf->size / BLOCK_SIZE) ||
-      fallocate(mapfile, FALLOC_FL_KEEP_SIZE, 0, vf->size / BLOCK_SIZE))
-    debugperror("ftruncate mapfile");
+  if (posix_fallocate(mapfile, 0, vf->size / BLOCK_SIZE))
+    debugperror("posix_fallocate mapfile");
   vf->map = mmap(NULL, vf->size / BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED,
                     mapfile, 0);
   memset(vf->map, 0x1, vf->size / BLOCK_SIZE); // TODO: temporary for demo purposes
@@ -401,7 +399,7 @@ static int cbs_open(const char *path, struct fuse_file_info *info)
   char localpath[PATH_MAX] = ".";
   strcat(localpath, path);
   int len = strlen(localpath);
-  info->direct_io = 1;
+  info->direct_io = 0;
   if (len > 7 && !strcmp(&localpath[len - 7], ".volume"))
     info->fh = (uintptr_t)open_volume(localpath);
   else if (len > 9 && !strcmp(&localpath[len - 9], ".snapshot"))
